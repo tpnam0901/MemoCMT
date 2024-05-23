@@ -221,4 +221,3 @@ dependencies:
   - zstd=1.5.5=hc292b87_2
   - pip:
       - torchsummary==1.5.1
-prefix: /home/namphuongtran9196/miniconda3/envs/TestSER
