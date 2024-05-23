@@ -1,11 +1,15 @@
-import math
-import torch
 import torch.nn as nn
-import torchaudio
-from transformers import BertConfig, BertModel, RobertaConfig, RobertaModel
+from transformers import (
+    BertConfig,
+    BertModel,
+    RobertaConfig,
+    RobertaModel,
+    FocalNetConfig,
+    FocalNetModel,
+)
 
 from configs.base import Config
-from torchvggish import vggish
+
 
 def build_bert_encoder() -> nn.Module:
     """A function to build bert encoder"""
@@ -23,68 +27,13 @@ def build_roberta_encoder() -> nn.Module:
     return roberta
 
 
-class VGGish(nn.Module):
-    def __init__(self, postprocess):
-        super(VGGish, self).__init__()
-        self.vggish = vggish(postprocess)
-
-    def forward(self, x):
-        out = []
-        for i in range(x.size(0)):
-            out.append(self.vggish(x[i]))
-        x = torch.stack(out, dim=0)
-        if len(x.size()) == 2:
-            x = x.unsqueeze(1)
-        return x
-
-def build_vggish_encoder(cfg: Config) -> nn.Module:
-    """A function to build vggish encoder"""
-    return VGGish(cfg.audio_postprocess)
-
-class HuBertBase(nn.Module):
-    def __init__(self, **kwargs):
-        super(HuBertBase, self).__init__(**kwargs)
-        bundle = torchaudio.pipelines.HUBERT_BASE
-        self.model = bundle.get_model()
-
-    def forward(self, x):
-        features, _ = self.model(x)
-        return features
-
-
-def build_hubert_base_encoder(cfg: Config) -> nn.Module:
-    """A function to build hubert encoder"""
-    return HuBertBase()
-
-
-class Wav2Vec2Base(nn.Module):
-    def __init__(self, **kwargs):
-        super(Wav2Vec2Base, self).__init__(**kwargs)
-        bundle = torchaudio.pipelines.WAV2VEC2_BASE
-        self.model = bundle.get_model()
-
-    def forward(self, x):
-        features, _ = self.model(x)
-        return features
-
-
-def build_wav2vec2_base_encoder(cfg: Config) -> nn.Module:
-    return Wav2Vec2Base()
-
-
-class WavlmBase(nn.Module):
-    def __init__(self, **kwargs):
-        super(WavlmBase, self).__init__(**kwargs)
-        bundle = torchaudio.pipelines.WAVLM_BASE
-        self.model = bundle.get_model()
-
-    def forward(self, x):
-        features, _ = self.model(x)
-        return features
-
-
-def build_wavlm_base_encoder(cfg: Config) -> nn.Module:
-    return WavlmBase()
+def build_focalnet_tiny_encoder() -> nn.Module:
+    """A function to build focalnet encoder"""
+    config = FocalNetConfig.from_pretrained(
+        "microsoft/focalnet-tiny", output_hidden_states=True
+    )
+    focalnet = FocalNetModel.from_pretrained("microsoft/focalnet-tiny", config=config)
+    return focalnet
 
 
 def build_audio_encoder(cfg: Config) -> nn.Module:
@@ -99,13 +48,10 @@ def build_audio_encoder(cfg: Config) -> nn.Module:
     type = cfg.audio_encoder_type
 
     encoders = {
-        "vggish": build_vggish_encoder,
-        "hubert_base": build_hubert_base_encoder,
-        "wav2vec2_base": build_wav2vec2_base_encoder,
-        "wavlm_base": build_wavlm_base_encoder,
+        "focalnet_t": build_focalnet_tiny_encoder,
     }
     assert type in encoders.keys(), f"Invalid audio encoder type: {type}"
-    return encoders[type](cfg)
+    return encoders[type]()
 
 
 def build_text_encoder(type: str = "bert") -> nn.Module:

@@ -11,7 +11,7 @@ import random
 
 import numpy as np
 import torch
-from torch import nn, optim
+from torch import optim
 
 import trainer as Trainer
 from configs.base import Config
@@ -19,7 +19,6 @@ from data.dataloader import build_train_test_dataset
 from models import losses, networks, optims
 from utils.configs import get_options
 from utils.torch.callbacks import CheckpointsCallback
-from tqdm.auto import tqdm
 
 SEED = 0
 random.seed(SEED)
@@ -30,6 +29,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def main(cfg: Config):
+    if cfg.batch_size > 1:
+        raise NotImplementedError("FocalNetModel is not implemented for batch_size yet")
     logging.info("Initializing model...")
     # Model
     try:
@@ -67,35 +68,6 @@ def main(cfg: Config):
     except AttributeError:
         raise NotImplementedError("Trainer {} is not implemented".format(cfg.trainer))
 
-    if cfg.transfer_learning:
-        logging.info("Transfer learning phase")
-        trainer.network.transfer_learning = True
-        train_ds_encode, test_ds_encode = build_train_test_dataset(cfg, trainer.network)
-        optimizer_transfer = optims.get_optim(cfg, network)
-        trainer.compile(optimizer=optimizer_transfer)
-        ckpt_callback_transfer = CheckpointsCallback(
-            checkpoint_dir=weight_dir,
-            save_freq=cfg.num_transer_epochs * len(train_ds_encode) * 2,
-            max_to_keep=cfg.max_to_keep,
-            save_best_val=True,
-            save_all_states=False,
-        )
-        trainer.fit(
-            train_ds_encode,
-            cfg.num_transer_epochs,
-            test_ds_encode,
-            callbacks=[ckpt_callback_transfer],
-        )
-
-        trainer.network.load_state_dict(torch.load(ckpt_callback_transfer.best_path))
-        trainer.network.transfer_learning = False
-        del (
-            train_ds_encode,
-            test_ds_encode,
-            optimizer_transfer,
-            ckpt_callback_transfer,
-        )
-
     train_ds, test_ds = build_train_test_dataset(cfg)
     logging.info("Initializing trainer...")
 
@@ -121,7 +93,6 @@ def main(cfg: Config):
     if cfg.resume:
         trainer.load_all_states(cfg.resume_path)
 
-    logging.info("Fine-tuning phase")
     trainer.compile(optimizer=optimizer, scheduler=lr_scheduler)
     trainer.fit(train_ds, cfg.num_epochs, test_ds, callbacks=[ckpt_callback])
 

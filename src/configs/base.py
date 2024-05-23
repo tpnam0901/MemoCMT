@@ -99,7 +99,6 @@ class Config(BaseConfig):
         # Training settings
         self.trainer = "Trainer"  # Trainer type use for training model [MSER_Trainer, Trainer, MarginTrainer]
         self.num_epochs: int = 100
-        self.num_transer_epochs: int = 50
         self.checkpoint_dir: str = "checkpoints"
         self.save_all_states: bool = False
         self.save_best_val: bool = True
@@ -130,27 +129,7 @@ class Config(BaseConfig):
         if self.resume:
             assert os.path.exists(str(self.resume_path)), "Resume path not found"
 
-        # [CrossEntropyLoss, CrossEntropyLoss_ContrastiveCenterLoss, CrossEntropyLoss_CenterLoss,
-        #  CombinedMarginLoss, FocalLoss,CenterLossSER,ContrastiveCenterLossSER, CrossEntropyLoss_CombinedMarginLoss]
         self.loss_type: str = "CrossEntropyLoss"
-
-        # lambda_total * cross-entropy loss, (1 - lambda_total) * feature_loss
-        self.lambda_total = 1.0
-
-        # For CrossEntropyLoss_ContrastiveCenterLoss
-        self.lambda_c: float = 1.0
-        self.feat_dim: int = 128
-
-        # For combined margin loss
-        self.margin_loss_m1: float = 1.0
-        self.margin_loss_m2: float = 0.5
-        self.margin_loss_m3: float = 0.0
-        self.margin_loss_scale: float = 64.0
-
-        # For focal loss
-        self.focal_loss_gamma: float = 0.5
-        self.focal_loss_alpha: Union[float, None] = None
-        self.focal_loss_size_average: bool = True
 
         # Dataset
         self.data_name: str = (
@@ -169,39 +148,23 @@ class Config(BaseConfig):
         self.audio_max_length: int = 546220
 
         # Model
-        self.transfer_learning: bool = False
         self.num_classes: int = 4
         self.num_attention_head: int = 8
         self.dropout: float = 0.5
-        self.model_type: str = "_4M_SER"  # [_4M_SER, AudioOnly, TextOnly, SERVER]
+        self.model_type: str = "TestSER"  #
         self.text_encoder_type: str = "bert"  # [bert, roberta]
         self.text_encoder_dim: int = 768
         self.text_unfreeze: bool = False
-        self.audio_encoder_type: str = (
-            "vggish"  # [vggish, panns, hubert_base, wav2vec2_base, wavlm_base, lstm]
-        )
-        self.audio_encoder_dim: int = (
-            128  # 2048 - panns, 128 - vggish, 768 - hubert_base,wav2vec2_base,wavlm_base, 512 - lstm
-        )
-        self.audio_norm_type: str = "layer_norm"  # [layer_norm, min_max, None]
+        self.audio_encoder_type: str = "focalnet_t"
+        self.audio_im_size: int = 224
+        self.audio_encoder_dim: int = 768
         self.audio_unfreeze: bool = False
-        self.audio_postprocess: bool = True
 
-        self.fusion_dim: int = 128
+        self.fusion_dim: int = 768
         self.fusion_head_output_type: str = "cls"  # [cls, mean, max]
 
-        # For LSTM
-        self.lstm_hidden_size = 512  # should be the same as audio_encoder_dim
-        self.lstm_num_layers = 2
-
-        # For hyperparameter search
-        self.optim_attributes: Union[List, None] = None
-        # Example of hyperparameter search for lambda_c.
-        # self.lambda_c = [x / 10 for x in range(5, 21, 5)]
-        # self.optim_attributes = ["lambda_c"]
-
         # Search for linear layer output dimension
-        self.linear_layer_output: List = [64]
+        self.linear_layer_output: List = [128]
         self.linear_layer_last_dim: int = 64
         for key, value in kwargs.items():
             setattr(self, key, value)

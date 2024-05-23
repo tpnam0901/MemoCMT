@@ -6,18 +6,18 @@ import logging
 import numpy as np
 import soundfile as sf
 import torch
-import torchaudio
 from torch.utils.data import DataLoader, Dataset
 from transformers import (
     BertTokenizer,
     RobertaTokenizer,
 )
 
-from models.networks import _4M_SER
+from models.networks import TestSER
 from configs.base import Config
 from torchvggish.vggish_input import waveform_to_examples
 from tqdm.auto import tqdm
 import pickle
+import librosa
 
 
 class BaseDataset(Dataset):
@@ -25,7 +25,7 @@ class BaseDataset(Dataset):
         self,
         cfg: Config,
         data_mode: str = "train.pkl",
-        encoder_model: Union[_4M_SER, None] = None,
+        encoder_model: Union[TestSER, None] = None,
     ):
         """Dataset for IEMOCAP
 
@@ -108,8 +108,7 @@ class BaseDataset(Dataset):
         return input_text, input_audio, label
 
     def __paudio__(self, file_path: int) -> torch.Tensor:
-        wav_data, sr = sf.read(file_path, dtype="int16")
-        samples = wav_data / 32768.0  # Convert to [-1.0, +1.0]
+        samples, sr = sf.read(file_path, dtype="int16")
         if (
             self.audio_max_length is not None
             and samples.shape[0] < self.audio_max_length
@@ -120,17 +119,10 @@ class BaseDataset(Dataset):
         elif self.audio_max_length is not None:
             samples = samples[: self.audio_max_length]
 
-        if (
-            self.audio_encoder_type == "vggish"
-            or self.audio_encoder_type == "vggish768"
-            or self.audio_encoder_type == "lstm_mel"
-        ):
-            samples = waveform_to_examples(
-                samples, sr, return_tensor=False
-            )  # num_samples, 96, 64
-            samples = np.expand_dims(samples, axis=1)  # num_samples, 1, 96, 64
-        elif self.audio_encoder_type != "panns":
-            samples = torchaudio.functional.resample(samples, sr, 16000)
+        samples = waveform_to_examples(
+            samples, sr, return_tensor=False
+        )  # num_samples, 96, 64
+        samples = np.expand_dims(samples, axis=1)  # num_samples, 1, 96, 64
 
         return torch.from_numpy(samples.astype(np.float32))
 
@@ -179,10 +171,65 @@ class BaseDataset(Dataset):
     def __len__(self):
         return len(self.data_list)
 
-def build_train_test_dataset(cfg: Config, encoder_model: Union[_4M_SER, None] = None):
+
+class FocalNetDataset(BaseDataset):
+    def __init__(
+        self,
+        cfg: Config,
+        data_mode: str = "train.pkl",
+        encoder_model: Union[TestSER, None] = None,
+    ):
+        super(FocalNetDataset, self).__init__(cfg, data_mode, encoder_model)
+        self.audio_resize = torch.nn.Upsample(
+            (cfg.audio_im_size, cfg.audio_im_size), mode="nearest"
+        )
+
+    def __getitem__(
+        self, index: int
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+
+        audio_path, text, label = self.data_list[index]
+        # num_samples, 1, 96, 64
+        log_mel = (
+            self.list_encode_audio_data[index]
+            if self.encode_data
+            else self.__paudio__(audio_path)
+        )
+        log_mel_delta1 = np.zeros((0, *log_mel.shape[-3:]))
+        for i in range(log_mel.size(0)):
+            # 96,64
+            sample = log_mel[i, 0]
+            delta1 = librosa.feature.delta(sample.numpy())
+            log_mel_delta1 = np.concatenate(
+                [log_mel_delta1, delta1[None, None, ...]], axis=0
+            )
+        log_mel_delta2 = np.zeros((0, *log_mel.shape[-3:]))
+        for i in range(log_mel_delta1.shape[0]):
+            # 96,64
+            sample = log_mel_delta1[i, 0]
+            delta2 = librosa.feature.delta(sample, order=2)
+            log_mel_delta2 = np.concatenate(
+                [log_mel_delta2, delta2[None, None, ...]], axis=0
+            )
+        input_audio = torch.from_numpy(
+            np.concatenate([log_mel.numpy(), log_mel_delta1, log_mel_delta2], axis=1)
+        )
+        input_audio = self.audio_resize(input_audio).float()
+
+        input_text = (
+            self.list_encode_text_data[index]
+            if self.encode_data
+            else self.__ptext__(text)
+        )
+        label = self.__plabel__(label)
+
+        return input_text, input_audio, label
+
+
+def build_train_test_dataset(cfg: Config, encoder_model: Union[TestSER, None] = None):
     DATASET_MAP = {
-        "IEMOCAP": BaseDataset,
-        "ESD": BaseDataset,
+        "IEMOCAP": FocalNetDataset,
+        "ESD": FocalNetDataset,
     }
 
     dataset = DATASET_MAP.get(cfg.data_name, None)
