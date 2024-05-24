@@ -78,10 +78,13 @@ class TestSER(nn.Module):
     ):
 
         text_embeddings = self.text_encoder(input_text).last_hidden_state
-        audio_embeddings = self.audio_encoder(input_audio[0]).last_hidden_state
-        audio_embeddings = audio_embeddings.mean(1).unsqueeze(
-            0
-        )  # Numsamples, hidden, embed -> 1, numsamples, embed
+        audio_embeddings = []
+        for i in range(input_audio.size(0)):
+            # Batch_size, numsamples, hidden, embed -> Numsamples, hidden, embed -> numsamples, embed
+            audio_embeddings.append(
+                self.audio_encoder(input_audio[i]).last_hidden_state.mean(1)
+            )
+        audio_embeddings = torch.stack(audio_embeddings, dim=0)
 
         ## Fusion Module
 
