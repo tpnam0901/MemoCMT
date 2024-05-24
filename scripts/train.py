@@ -29,8 +29,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def main(cfg: Config):
-    if cfg.batch_size > 1:
-        raise NotImplementedError("FocalNetModel is not implemented for batch_size yet")
     logging.info("Initializing model...")
     # Model
     try:
