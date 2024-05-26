@@ -34,6 +34,8 @@ class Config(BaseConfig):
         self.data_name: str = "IEMOCAP"
         self.data_root: str = "working/dataset/IEMOCAP_preprocessed"
         self.data_valid: str = "val.pkl"
+        self.text_max_length: int = 297
+        self.audio_max_length: int = 546220
 
         # Config name
         self.name = (

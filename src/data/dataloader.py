@@ -213,8 +213,8 @@ class FocalNetDataset(BaseDataset):
             )
         input_audio = torch.from_numpy(
             np.concatenate([log_mel.numpy(), log_mel_delta1, log_mel_delta2], axis=1)
-        )
-        input_audio = self.audio_resize(input_audio).float()
+        ).float()
+        # input_audio = self.audio_resize(input_audio)
 
         input_text = (
             self.list_encode_text_data[index]
