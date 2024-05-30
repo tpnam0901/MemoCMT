@@ -146,6 +146,7 @@ def preprocess_IEMOCAP(args):
     logging.info(f"Saved to {args.dataset + '_preprocessed'}")
     logging.info("Preprocessing finished successfully")
 
+
 def preprocess_ESD(args):
     esd2label = {
         "Angry": "ang",
@@ -206,10 +207,79 @@ def preprocess_ESD(args):
     logging.info("Preprocessing finished successfully")
 
 
+def preprocess_MELD(args):
+    meld2label = {
+        "anger": "ang",
+        "joy": "hap",
+        "neutral": "neu",
+        "sadness": "sad",
+    }
+
+    train_csv = os.path.join(args.data_root, "train_sent_emo.csv")
+    val_csv = os.path.join(args.data_root, "dev_sent_emo.csv")
+    test_csv = os.path.join(args.data_root, "test_sent_emo.csv")
+
+    train_dataframe = pd.read_csv(train_csv)
+    val_dataframe = pd.read_csv(val_csv)
+    test_dataframe = pd.read_csv(test_csv)
+
+    def _preprocess_data(data_path, dataframe):
+        samples = []
+        # Loop through all folders
+        for _, row in tqdm.tqdm(dataframe.iterrows()):
+            # Read label file
+            label = meld2label.get(row.Emotion, None)
+            if label is None:
+                continue
+            transcript = str(row.Utterance)
+            video_path = os.path.abspath(
+                os.path.join(
+                    data_path, f"dia{row.Dialogue_ID}_utt{row.Utterance_ID}.mp4"
+                )
+            )
+            audio_path = os.path.abspath(
+                os.path.join(
+                    data_path, f"dia{row.Dialogue_ID}_utt{row.Utterance_ID}.wav"
+                )
+            )
+            # Convert video to audio
+            videoclip = VideoFileClip(video_path)
+            videoclip.audio.write_audiofile(audio_path, verbose=False)
+            samples.append((audio_path, transcript, LABEL_MAP[label]))
+
+        return samples
+
+    train_samples = _preprocess_data(
+        os.path.join(args.data_root, "train_splits"), train_dataframe
+    )
+    val_samples = _preprocess_data(
+        os.path.join(args.data_root, "dev_splits_complete"), val_dataframe
+    )
+    test_samples = _preprocess_data(
+        os.path.join(args.data_root, "output_repeated_splits_test"), test_dataframe
+    )
+
+    # Save data
+    os.makedirs(args.dataset + "_preprocessed", exist_ok=True)
+    with open(os.path.join(args.dataset + "_preprocessed", "train.pkl"), "wb") as f:
+        pickle.dump(train_samples, f)
+    with open(os.path.join(args.dataset + "_preprocessed", "val.pkl"), "wb") as f:
+        pickle.dump(val_samples, f)
+    with open(os.path.join(args.dataset + "_preprocessed", "test.pkl"), "wb") as f:
+        pickle.dump(test_samples, f)
+
+    logging.info(f"Train samples: {len(train_samples)}")
+    logging.info(f"Train samples: {len(val_samples)}")
+    logging.info(f"Test samples: {len(test_samples)}")
+    logging.info(f"Saved to {args.dataset + '_preprocessed'}")
+    logging.info("Preprocessing finished successfully")
+
+
 def main(args):
     preprocess_fn = {
         "IEMOCAP": preprocess_IEMOCAP,
         "ESD": preprocess_ESD,
+        "MELD": preprocess_MELD,
     }
 
     preprocess_fn[args.dataset](args)
@@ -218,7 +288,7 @@ def main(args):
 def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-ds", "--dataset", type=str, default="ESD", choices=["IEMOCAP", "ESD"]
+        "-ds", "--dataset", type=str, default="ESD", choices=["IEMOCAP", "ESD", "MELD"]
     )
     parser.add_argument(
         "-dr",
