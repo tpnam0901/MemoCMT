@@ -107,6 +107,8 @@ class TorchTrainer(ABC, nn.Module):
                         )
         for key, value in epoch_log.items():
             logger.info(f"Epoch {epoch} - {key}: {np.mean(value):.4f}")
+            mlflow.log_metric(f"train_epoch_{key}", np.mean(value), step=step)
+
         if eval_data is not None:
             self.network.eval()
             logger.info("Performing validation...")
