@@ -1,4 +1,5 @@
 import argparse
+import json
 import glob
 import logging
 import os
@@ -222,6 +223,22 @@ def preprocess_MELD(args):
     train_dataframe = pd.read_csv(train_csv)
     val_dataframe = pd.read_csv(val_csv)
     test_dataframe = pd.read_csv(test_csv)
+    if args.all_classes:
+        meld2label = {}
+        LABEL_MAP = {}
+        labels = []
+        for _, row in test_dataframe.iterrows():
+            labels.append(row.Emotion)
+        labels = list(set(labels))
+        for i, label_name in enumerate(labels):
+            meld2label[label_name] = i
+        for i in range(len(labels)):
+            LABEL_MAP[i] = [i]
+        
+        # Save labels
+        os.makedirs(args.dataset + "_preprocessed", exist_ok=True)
+        with open(os.path.join(args.dataset + "_preprocessed", "classes.json"), "w") as f:
+            json.dump(meld2label, f)
 
     def _preprocess_data(data_path, dataframe):
         samples = []
@@ -297,6 +314,7 @@ def arg_parser():
         help="Path to folder containing IEMOCAP data",
         required=True,
     )
+    parser.add_argument("--all_classes", action="store_true")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--ignore_length",
