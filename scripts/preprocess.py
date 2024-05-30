@@ -260,9 +260,12 @@ def preprocess_MELD(args):
                 )
             )
             # Convert video to audio
-            videoclip = VideoFileClip(video_path)
-            videoclip.audio.write_audiofile(audio_path, verbose=False)
-            samples.append((audio_path, transcript, LABEL_MAP[label]))
+            try:
+                videoclip = VideoFileClip(video_path)
+                videoclip.audio.write_audiofile(audio_path, verbose=False)
+                samples.append((audio_path, transcript, LABEL_MAP[label]))
+            except:
+                logging.warn(f"Can not preprocess video data: {video_path}")
 
         return samples
 
