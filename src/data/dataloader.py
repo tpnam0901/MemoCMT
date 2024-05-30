@@ -230,6 +230,7 @@ def build_train_test_dataset(cfg: Config, encoder_model: Union[TestSER, None] = 
     DATASET_MAP = {
         "IEMOCAP": FocalNetDataset,
         "ESD": FocalNetDataset,
+        "MELD": FocalNetDataset,
     }
 
     dataset = DATASET_MAP.get(cfg.data_name, None)
