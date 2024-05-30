@@ -233,7 +233,7 @@ def preprocess_MELD(args):
         for i, label_name in enumerate(labels):
             meld2label[label_name] = i
         for i in range(len(labels)):
-            LABEL_MAP[i] = [i]
+            LABEL_MAP[i] = i
         
         # Save labels
         os.makedirs(args.dataset + "_preprocessed", exist_ok=True)
