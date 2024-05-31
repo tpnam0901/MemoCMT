@@ -10,12 +10,12 @@ class Config(BaseConfig):
             setattr(self, key, value)
 
     def add_args(self, **kwargs):
-        self.batch_size = 2
+        self.batch_size = 1
         self.num_epochs = 100
 
         self.loss_type = "CrossEntropyLoss"
 
-        self.checkpoint_dir = "working/checkpoints/MELD"
+        self.checkpoint_dir = "working/checkpoints/IEMOCAP"
 
         self.model_type = "TestSER"
 
@@ -28,13 +28,12 @@ class Config(BaseConfig):
         self.audio_encoder_dim = 768
         self.audio_unfreeze = False
 
-        self.fusion_dim: int = 768
-
-        self.num_classes = 7
+        self.fusion_dim: int = 2048
+        self.num_attention_head = 32
 
         # Dataset
-        self.data_name: str = "MELD"
-        self.data_root: str = "working/dataset/MELD_preprocessed"
+        self.data_name: str = "IEMOCAP"
+        self.data_root: str = "working/dataset/IEMOCAP_preprocessed"
         self.data_valid: str = "val.pkl"
         self.text_max_length: int = 297
         self.audio_max_length: int = 546220
