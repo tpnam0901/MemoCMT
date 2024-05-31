@@ -12,6 +12,7 @@ import csv
 import glob
 import argparse
 import torch
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -96,13 +97,15 @@ def eval(cfg, checkpoint_path, all_state_dict=True, cm=False):
         )
         ax.set_xlabel("Predicted", fontsize=18, fontweight="bold")
         ax.xaxis.set_label_position("bottom")
-        ax.xaxis.set_ticklabels(
-            ["Anger", "Happiness", "Sadness", "Neutral"], fontsize=16
-        )
+        label_names = ["Anger", "Happiness", "Sadness", "Neutral"]
+        if cfg.num_classes != 4:
+            with open(os.path.join(cfg.data_root, "classes.json"), "r") as f:
+                label_data = json.load(f)
+                label_names = label_data.keys()
+
+        ax.xaxis.set_ticklabels(label_names, fontsize=16)
         ax.set_ylabel("Ground Truth", fontsize=18, fontweight="bold")
-        ax.yaxis.set_ticklabels(
-            ["Anger", "Happiness", "Sadness", "Neutral"], fontsize=16
-        )
+        ax.yaxis.set_ticklabels(label_names, fontsize=16)
         plt.tight_layout()
         plt.savefig(
             "confusion_matrix_" + cfg.name + cfg.data_valid + ".png",
