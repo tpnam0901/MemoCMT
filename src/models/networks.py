@@ -223,13 +223,10 @@ class TestSER_v2(nn.Module):
     ):
 
         text_embeddings = self.text_encoder(input_text).last_hidden_state
-        audio_embeddings = []
-        for i in range(input_audio.size(0)):
-            # Batch_size, numsamples, hidden, embed -> Numsamples, hidden, embed -> numsamples, embed
-            audio_embeddings.append(
-                self.audio_encoder(input_audio[i]).last_hidden_state.mean(1)
-            )
-        audio_embeddings = torch.stack(audio_embeddings, dim=0)
+        batch_size, num_samples = input_audio.size(0), input_audio.size(1)
+        audio_embeddings = self.audio_encoder(input_audio.view(-1, *input_audio.shape[2:])).last_hidden_state
+        audio_embeddings = audio_embeddings.mean(1)
+        audio_embeddings = audio_embeddings.view(batch_size, num_samples, *audio_embeddings.shape[1:])
 
         ## Fusion Module
 
@@ -355,13 +352,11 @@ class TestSER_v3(nn.Module):
     ):
 
         text_embeddings = self.text_encoder(input_text).last_hidden_state
-        audio_embeddings = []
-        for i in range(input_audio.size(0)):
-            # Batch_size, numsamples, hidden, embed -> Numsamples, hidden, embed -> numsamples, embed
-            audio_embeddings.append(
-                self.audio_encoder(input_audio[i]).last_hidden_state.mean(1)
-            )
-        audio_embeddings = torch.stack(audio_embeddings, dim=0)
+        batch_size, num_samples = input_audio.size(0), input_audio.size(1)
+        audio_embeddings = self.audio_encoder(input_audio.view(-1, *input_audio.shape[2:])).last_hidden_state
+        audio_embeddings = audio_embeddings.mean(1)
+        audio_embeddings = audio_embeddings.view(batch_size, num_samples, *audio_embeddings.shape[1:])
+
 
         ## Fusion Module
 
