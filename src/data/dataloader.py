@@ -11,6 +11,7 @@ from transformers import (
     BertTokenizer,
     RobertaTokenizer,
 )
+import torchaudio
 
 from models.networks import TestSER
 from configs.base import Config
@@ -119,10 +120,7 @@ class BaseDataset(Dataset):
         elif self.audio_max_length is not None:
             samples = samples[: self.audio_max_length]
 
-        samples = waveform_to_examples(
-            samples, sr, return_tensor=False
-        )  # num_samples, 96, 64
-        samples = np.expand_dims(samples, axis=1)  # num_samples, 1, 96, 64
+        samples = torchaudio.functional.resample(samples, sr, 16000)
 
         return torch.from_numpy(samples.astype(np.float32))
 
@@ -189,6 +187,7 @@ class FocalNetDataset(BaseDataset):
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
 
         audio_path, text, label = self.data_list[index]
+
         # num_samples, 1, 96, 64
         log_mel = (
             self.list_encode_audio_data[index]
@@ -229,6 +228,9 @@ class FocalNetDataset(BaseDataset):
 def build_train_test_dataset(cfg: Config, encoder_model: Union[TestSER, None] = None):
     DATASET_MAP = {
         "IEMOCAP": FocalNetDataset,
+        "IEMOCAP_HuBERT": BaseDataset,
+        "MELD_HuBERT": BaseDataset,
+        "ESD_HuBERT": BaseDataset,
         "ESD": FocalNetDataset,
         "MELD": FocalNetDataset,
     }

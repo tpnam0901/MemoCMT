@@ -78,10 +78,13 @@ class TestSER(nn.Module):
     ):
 
         text_embeddings = self.text_encoder(input_text).last_hidden_state
-        batch_size, num_samples = input_audio.size(0), input_audio.size(1)
-        audio_embeddings = self.audio_encoder(input_audio.view(-1, *input_audio.shape[2:])).last_hidden_state
-        audio_embeddings = audio_embeddings.mean(1)
-        audio_embeddings = audio_embeddings.view(batch_size, num_samples, *audio_embeddings.shape[1:])
+        if len(input_audio.size()) != 2:
+            batch_size, num_samples = input_audio.size(0), input_audio.size(1)
+            audio_embeddings = self.audio_encoder(input_audio.view(-1, *input_audio.shape[2:])).last_hidden_state
+            audio_embeddings = audio_embeddings.mean(1)
+            audio_embeddings = audio_embeddings.view(batch_size, num_samples, *audio_embeddings.shape[1:])
+        else:
+            audio_embeddings = self.audio_encoder(input_audio)
 
         ## Fusion Module
 
@@ -352,7 +355,9 @@ class TestSER_v3(nn.Module):
     ):
 
         text_embeddings = self.text_encoder(input_text).last_hidden_state
+        
         batch_size, num_samples = input_audio.size(0), input_audio.size(1)
+        print(input_audio.size())
         audio_embeddings = self.audio_encoder(input_audio.view(-1, *input_audio.shape[2:])).last_hidden_state
         audio_embeddings = audio_embeddings.mean(1)
         audio_embeddings = audio_embeddings.view(batch_size, num_samples, *audio_embeddings.shape[1:])

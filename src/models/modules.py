@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torchaudio
 from transformers import (
     BertConfig,
     BertModel,
@@ -36,6 +37,22 @@ def build_focalnet_tiny_encoder() -> nn.Module:
     return focalnet
 
 
+class HuBertBase(nn.Module):
+    def __init__(self, **kwargs):
+        super(HuBertBase, self).__init__(**kwargs)
+        bundle = torchaudio.pipelines.HUBERT_BASE
+        self.model = bundle.get_model()
+
+    def forward(self, x):
+        features, _ = self.model(x)
+        return features
+
+
+def build_hubert_base_encoder(cfg: Config) -> nn.Module:
+    """A function to build hubert encoder"""
+    return HuBertBase()
+
+
 def build_audio_encoder(cfg: Config) -> nn.Module:
     """A function to build audio encoder
 
@@ -49,6 +66,7 @@ def build_audio_encoder(cfg: Config) -> nn.Module:
 
     encoders = {
         "focalnet_t": build_focalnet_tiny_encoder,
+        "hubert_base": HuBertBase,
     }
     assert type in encoders.keys(), f"Invalid audio encoder type: {type}"
     return encoders[type]()
