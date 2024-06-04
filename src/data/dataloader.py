@@ -13,7 +13,7 @@ from transformers import (
 )
 import torchaudio
 
-from models.networks import TestSER
+from models.networks import Emolinse
 from configs.base import Config
 from torchvggish.vggish_input import waveform_to_examples
 from tqdm.auto import tqdm
@@ -26,7 +26,7 @@ class BaseDataset(Dataset):
         self,
         cfg: Config,
         data_mode: str = "train.pkl",
-        encoder_model: Union[TestSER, None] = None,
+        encoder_model: Union[Emolinse, None] = None,
     ):
         """Dataset for IEMOCAP
 
@@ -175,7 +175,7 @@ class FocalNetDataset(BaseDataset):
         self,
         cfg: Config,
         data_mode: str = "train.pkl",
-        encoder_model: Union[TestSER, None] = None,
+        encoder_model: Union[Emolinse, None] = None,
     ):
         super(FocalNetDataset, self).__init__(cfg, data_mode, encoder_model)
         self.audio_resize = torch.nn.Upsample(
@@ -225,7 +225,7 @@ class FocalNetDataset(BaseDataset):
         return input_text, input_audio, label
 
 
-def build_train_test_dataset(cfg: Config, encoder_model: Union[TestSER, None] = None):
+def build_train_test_dataset(cfg: Config, encoder_model: Union[Emolinse, None] = None):
     DATASET_MAP = {
         "IEMOCAP": FocalNetDataset,
         "IEMOCAP_HuBERT": BaseDataset,
