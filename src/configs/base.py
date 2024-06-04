@@ -111,7 +111,7 @@ class Config(BaseConfig):
         self.learning_rate_step_size: int = 30
         self.learning_rate_gamma: float = 0.1
 
-        self.optimizer_type: str = "SGD"  # Adam, SGD, AdamW
+        self.optimizer_type: str = "Adam"  # Adam, SGD, AdamW
         # Adam config
         self.adam_beta_1 = 0.9
         self.adam_beta_2 = 0.999
@@ -150,13 +150,12 @@ class Config(BaseConfig):
         # Model
         self.num_classes: int = 4
         self.num_attention_head: int = 8
-        self.dropout: float = 0.5
-        self.model_type: str = "TestSER"  #
+        self.dropout: float = 0.05
+        self.model_type: str = "Emolinse"  #
         self.text_encoder_type: str = "bert"  # [bert, roberta]
         self.text_encoder_dim: int = 768
         self.text_unfreeze: bool = False
-        self.audio_encoder_type: str = "focalnet_t"
-        self.audio_im_size: int = 224
+        self.audio_encoder_type: str = "hubert_base"
         self.audio_encoder_dim: int = 768
         self.audio_unfreeze: bool = False
 

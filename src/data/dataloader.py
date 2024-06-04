@@ -41,8 +41,6 @@ class BaseDataset(Dataset):
 
         if cfg.text_encoder_type == "bert":
             self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-        elif cfg.text_encoder_type == "roberta":
-            self.tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
         else:
             raise NotImplementedError(
                 "Tokenizer {} is not implemented".format(cfg.text_encoder_type)
@@ -170,69 +168,10 @@ class BaseDataset(Dataset):
         return len(self.data_list)
 
 
-class FocalNetDataset(BaseDataset):
-    def __init__(
-        self,
-        cfg: Config,
-        data_mode: str = "train.pkl",
-        encoder_model: Union[Emolinse, None] = None,
-    ):
-        super(FocalNetDataset, self).__init__(cfg, data_mode, encoder_model)
-        self.audio_resize = torch.nn.Upsample(
-            (cfg.audio_im_size, cfg.audio_im_size), mode="nearest"
-        )
-
-    def __getitem__(
-        self, index: int
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-
-        audio_path, text, label = self.data_list[index]
-
-        # num_samples, 1, 96, 64
-        log_mel = (
-            self.list_encode_audio_data[index]
-            if self.encode_data
-            else self.__paudio__(audio_path)
-        )
-        log_mel_delta1 = np.zeros((0, *log_mel.shape[-3:]))
-        for i in range(log_mel.size(0)):
-            # 96,64
-            sample = log_mel[i, 0]
-            delta1 = librosa.feature.delta(sample.numpy())
-            log_mel_delta1 = np.concatenate(
-                [log_mel_delta1, delta1[None, None, ...]], axis=0
-            )
-        log_mel_delta2 = np.zeros((0, *log_mel.shape[-3:]))
-        for i in range(log_mel_delta1.shape[0]):
-            # 96,64
-            sample = log_mel_delta1[i, 0]
-            delta2 = librosa.feature.delta(sample, order=2)
-            log_mel_delta2 = np.concatenate(
-                [log_mel_delta2, delta2[None, None, ...]], axis=0
-            )
-        input_audio = torch.from_numpy(
-            np.concatenate([log_mel.numpy(), log_mel_delta1, log_mel_delta2], axis=1)
-        ).float()
-        # input_audio = self.audio_resize(input_audio)
-
-        input_text = (
-            self.list_encode_text_data[index]
-            if self.encode_data
-            else self.__ptext__(text)
-        )
-        label = self.__plabel__(label)
-
-        return input_text, input_audio, label
-
-
 def build_train_test_dataset(cfg: Config, encoder_model: Union[Emolinse, None] = None):
     DATASET_MAP = {
-        "IEMOCAP": FocalNetDataset,
-        "IEMOCAP_HuBERT": BaseDataset,
-        "MELD_HuBERT": BaseDataset,
-        "ESD_HuBERT": BaseDataset,
-        "ESD": FocalNetDataset,
-        "MELD": FocalNetDataset,
+        "IEMOCAP": BaseDataset,
+        "ESD": BaseDataset,
     }
 
     dataset = DATASET_MAP.get(cfg.data_name, None)
