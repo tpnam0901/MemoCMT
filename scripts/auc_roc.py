@@ -30,7 +30,7 @@ def eval(cfg, checkpoint_path, all_state_dict=True):
     if all_state_dict:
         weight = weight["state_dict_network"]
 
-    network.load_state_dict(weight)
+    network.load_state_dict(weight, strict=False)
     network.eval()
     network.to(device)
 
@@ -54,9 +54,17 @@ def main(args):
     logging.info("Finding checkpoints")
     test_set = args.test_set if args.test_set is not None else "test.pkl"
     checkpoints = {
-        "EmoLens": "",
-        "AudioOnly": "",
-        "TextOnly": "",
+        # "EmoLens_cls": "working/checkpoints/IEMOCAP_cls/20240603-185703",
+        # "EmoLens_min": "working/checkpoints/IEMOCAP_Min/TestSER_bert_hubert_base/20240609-000528",
+        # "EmoLens_max": "working/checkpoints/IEMOCAP_Max/TestSER_bert_hubert_base/20240606-234201",
+        # "EmoLens_mean": "working/checkpoints/IEMOCAP_Mean/TestSER_bert_hubert_base/20240609-000433",
+        # "AudioOnly": "working/checkpoints/IEMOCAP_Audio/AudioOnly_bert_hubert_base/20240609-011733",
+        # "TextOnly": "working/checkpoints/IEMOCAP_Text/TextOnly_bert_hubert_base/20240609-011550",
+        # "ESD_EmoLens_cls_20240606-160159": "working/checkpoints/ESD5_Cls/20240606-160159",
+        "ESD_EmoLens_cls_20240606-142333": "working/checkpoints/ESD5_Cls/20240606-142333",
+        "ESD_EmoLens_min": "working/checkpoints/ESD5_Min/TestSER_bert_hubert_base/20240607-012928",
+        "ESD_EmoLens_max": "working/checkpoints/ESD5_Max/TestSER_bert_hubert_base/20240606-231232",
+        "ESD_EmoLens_mean": "working/checkpoints/ESD5_Mean/TestSER_bert_hubert_base/20240606-231137",
     }
     dataFrame = {}
     dataset_name = ""
@@ -100,27 +108,31 @@ def main(args):
         dataFrame["y_true"] = y_true
         dataFrame[name] = y_pred
 
-    # Plot ROC curve for each model
-    plt.figure(figsize=(8, 5.5))
-
+    classUnique = set(dataFrame["y_true"])
+    LABEL_MAP = ["Angry", "Happy", "Sad", "Neutral", "Surprise"]
     for model in checkpoints.keys():
-        fpr, tpr, _ = roc_curve(dataFrame["y_true"], dataFrame[model])
-        roc_auc = auc(fpr, tpr)
-        plt.plot(fpr, tpr, label=f"{model} (AUC = {roc_auc:.2f})")
+        # Plot ROC curve for each model
+        plt.figure(figsize=(8, 5.5))
+        for cls in classUnique:
+            y_true = dataFrame["y_true"] == cls
+            y_pred = dataFrame[model] == cls
+            fpr, tpr, _ = roc_curve(y_true, y_pred)
+            roc_auc = auc(fpr, tpr)
+            plt.plot(fpr, tpr, label=f"{LABEL_MAP[cls]} (AUC = {roc_auc:.2f})")
 
-    # Plot random guess line
-    plt.plot([0, 1], [0, 1], "r--", label="Random Guess")
+        # Plot random guess line
+        plt.plot([0, 1], [0, 1], "r--", label="Random Guess")
 
-    # Set labels and title
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate")
-    plt.title("ROC Curves for Two Models")
-    plt.legend()
-    plt.savefig(
-        "AUC_ROC" + dataset_name + args.test_set + ".png",
-        format="png",
-        dpi=300,
-    )
+        # Set labels and title
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.legend()
+        plt.savefig(
+            f"AUC_ROC_{model}_" + dataset_name + test_set + ".png",
+            format="png",
+            dpi=300,
+        )
+        plt.close()
 
 
 def arg_parser():
