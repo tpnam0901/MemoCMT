@@ -17,6 +17,7 @@ from tqdm.auto import tqdm
 from models import networks
 from configs.base import Config
 from sklearn.metrics import roc_curve, auc
+import numpy as np
 
 
 def eval(cfg, checkpoint_path, all_state_dict=True):
@@ -44,15 +45,15 @@ def eval(cfg, checkpoint_path, all_state_dict=True):
         label = label.to(device)
         with torch.no_grad():
             output = network(input_ids, audio)[0]
-            _, preds = torch.max(output, 1)
             y_actu.append(label.detach().cpu().numpy()[0])
-            y_pred.append(preds.detach().cpu().numpy()[0])
-    return y_actu, y_pred
+            y_pred.append(output.detach().cpu().numpy()[0])
+    return y_actu, np.array(y_pred)
 
 
 def main(args):
     logging.info("Finding checkpoints")
     test_set = args.test_set if args.test_set is not None else "test.pkl"
+    # "ESD_EmoLens_cls_20240606-160159": "working/checkpoints/ESD5_Cls/20240606-160159",
     checkpoints = {
         # "EmoLens_cls": "working/checkpoints/IEMOCAP_cls/20240603-185703",
         # "EmoLens_min": "working/checkpoints/IEMOCAP_Min/TestSER_bert_hubert_base/20240609-000528",
@@ -60,7 +61,6 @@ def main(args):
         # "EmoLens_mean": "working/checkpoints/IEMOCAP_Mean/TestSER_bert_hubert_base/20240609-000433",
         # "AudioOnly": "working/checkpoints/IEMOCAP_Audio/AudioOnly_bert_hubert_base/20240609-011733",
         # "TextOnly": "working/checkpoints/IEMOCAP_Text/TextOnly_bert_hubert_base/20240609-011550",
-        # "ESD_EmoLens_cls_20240606-160159": "working/checkpoints/ESD5_Cls/20240606-160159",
         "ESD_EmoLens_cls_20240606-142333": "working/checkpoints/ESD5_Cls/20240606-142333",
         "ESD_EmoLens_min": "working/checkpoints/ESD5_Min/TestSER_bert_hubert_base/20240607-012928",
         "ESD_EmoLens_max": "working/checkpoints/ESD5_Max/TestSER_bert_hubert_base/20240606-231232",
@@ -115,10 +115,10 @@ def main(args):
         plt.figure(figsize=(8, 5.5))
         for cls in classUnique:
             y_true = dataFrame["y_true"] == cls
-            y_pred = dataFrame[model] == cls
+            y_pred = dataFrame[model][:, cls]
             fpr, tpr, _ = roc_curve(y_true, y_pred)
             roc_auc = auc(fpr, tpr)
-            plt.plot(fpr, tpr, label=f"{LABEL_MAP[cls]} (AUC = {roc_auc:.2f})")
+            plt.plot(fpr, tpr, label=f"{LABEL_MAP[cls]} (AUC = {roc_auc:.4f})")
 
         # Plot random guess line
         plt.plot([0, 1], [0, 1], "r--", label="Random Guess")
