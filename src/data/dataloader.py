@@ -13,7 +13,7 @@ from transformers import (
 )
 import torchaudio
 
-from models.networks import EmoLens
+from models.networks import MemoCMT
 from configs.base import Config
 from torchvggish.vggish_input import waveform_to_examples
 from tqdm.auto import tqdm
@@ -26,7 +26,7 @@ class BaseDataset(Dataset):
         self,
         cfg: Config,
         data_mode: str = "train.pkl",
-        encoder_model: Union[EmoLens, None] = None,
+        encoder_model: Union[MemoCMT, None] = None,
     ):
         """Dataset for IEMOCAP
 
@@ -168,7 +168,7 @@ class BaseDataset(Dataset):
         return len(self.data_list)
 
 
-def build_train_test_dataset(cfg: Config, encoder_model: Union[EmoLens, None] = None):
+def build_train_test_dataset(cfg: Config, encoder_model: Union[MemoCMT, None] = None):
     DATASET_MAP = {
         "IEMOCAP": BaseDataset,
         "ESD": BaseDataset,

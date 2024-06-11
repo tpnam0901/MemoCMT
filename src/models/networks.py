@@ -6,13 +6,13 @@ from configs.base import Config
 from .modules import build_audio_encoder, build_text_encoder
 
 
-class EmoLens(nn.Module):
+class MemoCMT(nn.Module):
     def __init__(
         self,
         cfg: Config,
         device: str = "cpu",
     ):
-        super(EmoLens, self).__init__()
+        super(MemoCMT, self).__init__()
         # Text module
         self.text_encoder = build_text_encoder(cfg.text_encoder_type)
         self.text_encoder.to(device)

@@ -17,7 +17,7 @@ class Config(BaseConfig):
 
         self.checkpoint_dir = "working/checkpoints/IEMOCAP"
 
-        self.model_type = "Emolinse"
+        self.model_type = "MemoCMT"
 
         self.text_encoder_type = "bert"  # [bert, roberta]
         self.text_encoder_dim = 768

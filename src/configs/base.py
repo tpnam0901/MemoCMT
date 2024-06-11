@@ -151,7 +151,7 @@ class Config(BaseConfig):
         self.num_classes: int = 4
         self.num_attention_head: int = 8
         self.dropout: float = 0.05
-        self.model_type: str = "Emolinse"  #
+        self.model_type: str = "MemoCMT"  #
         self.text_encoder_type: str = "bert"  # [bert, roberta]
         self.text_encoder_dim: int = 768
         self.text_unfreeze: bool = False

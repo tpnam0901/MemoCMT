@@ -5,7 +5,7 @@ from typing import Dict
 import torch
 from torch import Tensor
 from configs.base import Config
-from models.networks import EmoLens
+from models.networks import MemoCMT
 from utils.torch.trainer import TorchTrainer
 
 
@@ -13,7 +13,7 @@ class Trainer(TorchTrainer):
     def __init__(
         self,
         cfg: Config,
-        network: EmoLens,
+        network: MemoCMT,
         criterion: torch.nn.CrossEntropyLoss = None,
         **kwargs
     ):
