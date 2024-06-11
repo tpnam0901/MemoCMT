@@ -26,12 +26,12 @@
 - Clone this repository 
 ```bash
 git clone https://github.com/namphuongtran9196/MemoCMT.git 
-cd emolinse
+cd MemoCMT
 ```
 - Create a conda environment and install requirements
 ```bash
-conda create -n emolinse python=3.8 -y
-conda activate emolinse
+conda create -n MemoCMT python=3.8 -y
+conda activate MemoCMT
 conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.8 -c pytorch -c nvidia
 pip install -r requirements.txt
 ```
@@ -48,7 +48,7 @@ cd scripts && python preprocess.py -ds IEMOCAP --data_root ./data/IEMOCAP_full_r
 cd scripts && python train.py -cfg ../src/configs/hubert_base.py
 ```
 
-- You can also find our pre-trained models in the [release](https://github.com/namphuongtran9196/emolinse/releases).
+- You can also find our pre-trained models in the [release](https://github.com/namphuongtran9196/MemoCMT/releases).
 
 ## Citation
 ```bibtex
