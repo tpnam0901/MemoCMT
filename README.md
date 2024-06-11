@@ -34,8 +34,9 @@ conda create -n emolinse python=3.8 -y
 conda activate emolinse
 conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.8 -c pytorch -c nvidia
 pip install -r requirements.txt
+```
 
-- Dataset used in this project is [IEMOCAP](https://sail.usc.edu/iemocap/iemocap_release.htm)and [ESD](https://hltsingapore.github.io/ESD/). 
+- Dataset used in this project is [IEMOCAP](https://sail.usc.edu/iemocap/iemocap_release.htm) and [ESD](https://hltsingapore.github.io/ESD/). 
 
 ```bash
 cd scripts && python preprocess.py -ds IEMOCAP --data_root ./data/IEMOCAP_full_release
