@@ -4,7 +4,7 @@
   <br>
 </h1>
 
-<h4 align="center">Official code repository for paper "MemoCMT: Cross-Modal Transformer-Based} Multimodal Emotion Recognition System". Paper submitted to <a href="Scientific Reports"></a> Scientific Reports</h4>
+<h4 align="center">Official code repository for paper "MemoCMT: Cross-Modal Transformer-Based Multimodal Emotion Recognition System". Paper submitted to <a href="Scientific Reports">Scientific Reports</a> </h4>
 
 <p align="center">
 <a href=""><img src="https://img.shields.io/github/stars/namphuongtran9196/memocmt?" alt="stars"></a>
