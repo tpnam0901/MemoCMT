@@ -20,7 +20,7 @@
 </p>
 
 ## Abstract
-> 
+> Recent speech recognition models leverage transformers to analyze the long-range context (both spatial and temporal) within speech signals. While audio transformers excel at capturing global context using self-attention mechanisms, this comes at a significant computational cost. In contrast, convolutional designs could be more efficient but are ineffective at modeling long-range dependencies. To address these limitations, we propose MemoCMT, a multimodal emotion recognition system that incorporates cross-modal transformer (CMT) to effectively capture both local and global contexts in speech signals and text transcripts. Our system utilizes advancements in self-supervised speech representation models and pre-trained deep language representation models to improve efficiency. Specifically, we utilize HuBERT to extract audio embeddings from audio input, while BERT is applied to extract text embeddings from text input. Importantly, we employ CMT to leverage feature representations from both audio and text embeddings. These feature representations then undergo a fusion mechanism for final classification. We evaluated our system on the IEMOCAP and ESD datasets, achieving 81.33% and 91.93% unweighted accuracy (UW-Acc), and 81.85% and 91.84% weighted accuracy (W-Acc), respectively. 
 
 ## How To Use
 - Clone this repository 
