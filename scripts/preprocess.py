@@ -21,17 +21,17 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 torch.cuda.manual_seed_all(SEED)
 
+logging.getLogger().setLevel(logging.INFO)
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+
 LABEL_MAP = {
     "ang": 0,
     "hap": 1,
     "sad": 2,
     "neu": 3,
 }
-
-logging.getLogger().setLevel(logging.INFO)
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
 
 
 def export_mp4_to_audio(
@@ -215,6 +215,7 @@ def preprocess_MELD(args):
         "neutral": "neu",
         "sadness": "sad",
     }
+    label_map = LABEL_MAP.copy()
 
     train_csv = os.path.join(args.data_root, "train_sent_emo.csv")
     val_csv = os.path.join(args.data_root, "dev_sent_emo.csv")
@@ -225,7 +226,7 @@ def preprocess_MELD(args):
     test_dataframe = pd.read_csv(test_csv)
     if args.all_classes:
         meld2label = {}
-        LABEL_MAP = {}
+        label_map = {}
         labels = []
         for _, row in test_dataframe.iterrows():
             labels.append(row.Emotion)
@@ -233,11 +234,13 @@ def preprocess_MELD(args):
         for i, label_name in enumerate(labels):
             meld2label[label_name] = i
         for i in range(len(labels)):
-            LABEL_MAP[i] = i
-        
+            label_map[i] = i
+
         # Save labels
         os.makedirs(args.dataset + "_preprocessed", exist_ok=True)
-        with open(os.path.join(args.dataset + "_preprocessed", "classes.json"), "w") as f:
+        with open(
+            os.path.join(args.dataset + "_preprocessed", "classes.json"), "w"
+        ) as f:
             json.dump(meld2label, f)
 
     def _preprocess_data(data_path, dataframe):
@@ -263,9 +266,9 @@ def preprocess_MELD(args):
             try:
                 videoclip = VideoFileClip(video_path)
                 videoclip.audio.write_audiofile(audio_path, verbose=False)
-                samples.append((audio_path, transcript, LABEL_MAP[label]))
-            except:
-                logging.warn(f"Can not preprocess video data: {video_path}")
+                samples.append((audio_path, transcript, label_map[label]))
+            except Exception as e:
+                logging.warning(f"Failed to convert {video_path} to audio")
 
         return samples
 
