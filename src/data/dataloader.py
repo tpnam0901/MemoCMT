@@ -118,9 +118,11 @@ class BaseDataset(Dataset):
         elif self.audio_max_length is not None:
             samples = samples[: self.audio_max_length]
 
+        samples = torch.from_numpy(samples.astype(np.float32))
         samples = torchaudio.functional.resample(samples, sr, 16000)
+        samples = samples.squeeze()
 
-        return torch.from_numpy(samples.astype(np.float32))
+        return samples
 
     def _text_preprocessing(self, text):
         """
